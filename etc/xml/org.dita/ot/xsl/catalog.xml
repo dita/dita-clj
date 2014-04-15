@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<!--             (C) Copyright OASIS Open 2005, 2010.              -->
+<!--             (C) Copyright IBM Corporation 2001, 2004.         -->
+<!--             All Rights Reserved.                              -->
+<!--                                                               -->
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+
+  <!-- Catalog for DITA-OD XSL Stylesheets -->
+  <!-- It includes both SYSTEM and URI catalog declerations.
+       - The SYSTEM declarations are used by the Apache Catalog Resolver.
+       - The URI declarations are the proper declerations as per the OASIS Entity
+       Resolution Committee.  They are included in case some entity resolves adhere
+       to the spec to resolve the location of the schemas.
+  -->
+
+</catalog>
