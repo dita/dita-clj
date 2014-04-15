@@ -7,7 +7,7 @@
   :compile-path "target/classes"
   :target-path "target/lib" ;; jar goes here
   :clean-targets [:compile-path "target"]
-  :java-source-paths ["src/main/java"]
+  :java-source-paths ["src/java"]
   :java-source-exclude ["org/dita/dost/invoker/JavaInvoker.java"
                         "org/dita/dost/invoker/CommandLineInvoker.java"]
   :omit-source true  ;; don't put source in jar
