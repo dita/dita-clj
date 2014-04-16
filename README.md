@@ -12,6 +12,8 @@ the DITA-OT code and get the idea.
 
 ## Prelims
 
+DITA v 1.2 is [here](http://docs.oasis-open.org/dita/v1.2/spec/DITA1.2-spec.html)
+
 This project is based on Dita-OT, but is not just a wrapper.  It
 reorganizes the code to make it more conformant to standard practices
 and work with leiningen.  In particular, it replaces the `ant`-based
@@ -57,7 +59,7 @@ a simple `project.clj` file in the source root directory and then run
 
 ### XML Catalog
 
-dita-clj follows DITA-OT in using XML Catalogs; see
+dita-clj follows DITA-OT in using [XML Catalogs](https://www.oasis-open.org/committees/download.php/14809/xml-catalogs.html); see
 e.g. [XML file associations with DTDs and XML schemas](http://help.eclipse.org/juno/index.jsp?topic=%2Forg.eclipse.wst.xmleditor.doc.user%2Ftopics%2Fcxmlcat.html)
 
 The library is Apache Commons'
@@ -104,10 +106,11 @@ Windows.)
 
 ## Usage
 
-See the lein-dita plugin.  The idea is to process dita source by
-running:
+When we're done, the process should look something like the following:
 
-    $ lein dita pdf
+    $ lein new dita mydoc
+	$ cd mydoc    ## edit stuff
+	$ lein dita pdf   ## or html, etc.
 
 ## License
 
