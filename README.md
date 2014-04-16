@@ -98,7 +98,7 @@ immutable "kernel" of the toolkit, and it should be easy to examine
 and fix.
 
 **dita-clj support for plugins**: to be determined; see
-doc/extensions.md.
+[doc/extensions.md](doc/extensions.md).
 
 ## Usage
 
