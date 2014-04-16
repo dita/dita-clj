@@ -48,3 +48,41 @@ Windows.)
 Using plugins: the hook mechanism will be enabled by leiningen
 keywords in the project.clj file for each project.  See the leiningen
 template dita-template.
+
+# DITA-OT Extensions - implementation notes
+
+    Extension-point : doc : Impl
+	========================================================================================
+
+    dita.specialization.catalog.relative : add the content cat file to main DITA-OT catalog file.
+
+    dita.specialization.catalog :  DEPRECATED use dita.specialization.catalog.relative
+
+    dita.conductor.target.relative : add ant import to main ant build file.
+	    org.dita.dost.platform.InsertAntActionRelative
+
+    dita.conductor.target : DEPRECATED use dita.conductor.target.relative
+
+    dita.conductor.lib.import : add java libs to classpath
+	    org.dita.dost.platform.ImportAntLibAction
+
+    dita.conductor.plugin : org.dita.dost.platform.ImportPluginInfoAction
+
+    dita.conductor.transtype.check : add new value to list of valid transformation type names
+	    org.dita.dost.platform.ListTranstypeAction
+		org.dita.dost.platform.CheckTranstypeAct (prop transtype)
+
+    dita.transtype.print : declare transtype as a print type
+
+    dita.xsl.xhtml : overrides default (X)HTML output (including HTML Help and Eclipse Help)
+
+    dita.xsl.xslfo : Overrides default PDF output (formerly known as PDF2).
+
+    dita.xsl.strings :  add new strings to generated text file
+
+    dita.xsl.messages : add new messages to diagnostic message file.
+
+    dita.specialization.catalog.relative :
+
+dita.conductor.* mappings defined in build_template.xml
+
