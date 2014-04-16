@@ -18,8 +18,6 @@ import java.util.Locale;
 
 import org.dita.dost.exception.DITAOTException;
 import org.dita.dost.log.DITAOTJavaLogger;
-import org.dita.dost.module.Content;
-import org.dita.dost.module.ContentImpl;
 import org.dita.dost.pipeline.PipelineHashIO;
 import org.dita.dost.writer.AbstractExtendDitaWriter;
 import org.dita.dost.writer.AbstractWriter;
@@ -39,7 +37,7 @@ public final class IndexTermCollection {
     /** The collection of index terms. */
     private static IndexTermCollection collection = null;
     /** The list of all index term. */
-    private final List<IndexTerm> termList = new ArrayList<IndexTerm>(INT_16);
+    private final List<IndexTerm> termList = new ArrayList<IndexTerm>(16);
 
     /** The type of index term. */
     private String indexType = null;
@@ -166,8 +164,7 @@ public final class IndexTermCollection {
         /*
          * Sort all the terms recursively
          */
-        for (int i = 0; i < termListSize; i++) {
-            final IndexTerm term = termList.get(i);
+        for (final IndexTerm term : termList) {
             term.sortSubTerms();
         }
 
@@ -183,7 +180,6 @@ public final class IndexTermCollection {
         StringBuffer buff = new StringBuffer(outputFileRoot);
         AbstractWriter abstractWriter = null;
         IDitaTranstypeIndexWriter indexWriter = null;
-        final Content content = new ContentImpl();
 
         if (indexClass != null && indexClass.length() > 0) {
             //Instantiate the class value
@@ -199,8 +195,8 @@ public final class IndexTermCollection {
                     ((AbstractExtendDitaWriter) abstractWriter).setPipelineHashIO(this.getPipelineHashIO());
 
                 }catch (final ClassCastException e){
-                    javaLogger.logInfo(e.getMessage());
-                    javaLogger.logInfo(e.toString());
+                    javaLogger.info(e.getMessage());
+                    javaLogger.info(e.toString());
                     e.printStackTrace();
 
                 }
@@ -249,10 +245,9 @@ public final class IndexTermCollection {
         //if (!getTermList().isEmpty()){
         //Even if there is no term in the list create an empty index file
         //otherwise the compiler will report error.
-        content.setCollection(this.getTermList());
         abstractWriter.setLogger(javaLogger);
-        abstractWriter.setContent(content);
-        abstractWriter.write(buff.toString());
+        ((IDitaTranstypeIndexWriter) abstractWriter).setTermList(this.getTermList());
+        abstractWriter.write(new File(buff.toString()));
         //}
     }
 

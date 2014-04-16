@@ -5,9 +5,10 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :javac-options ["-target" "1.7" "-source" "1.7"] ;; "-Xlint:deprecation"]
   :compile-path "target/classes"
-  :target-path "target/lib" ;; jar goes here
+  :target-path "target/%s/lib" ;; jar goes here
   :clean-targets [:compile-path "target"]
   :java-source-paths ["src/java"]
+  :resource-paths ["resources"] ;; ["src/main/resource"]
   :java-source-exclude ["org/dita/dost/invoker/JavaInvoker.java"
                         "org/dita/dost/invoker/CommandLineInvoker.java"]
   :omit-source true  ;; don't put source in jar

@@ -22,8 +22,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dita.dost.exception.DITAOTXMLErrorHandler;
-import org.dita.dost.resolver.DitaURIResolverFactory;
-import org.dita.dost.resolver.URIResolverAdapter;
 import org.dita.dost.util.FileUtils;
 import org.dita.dost.util.StringUtils;
 import org.xml.sax.Attributes;
@@ -66,10 +64,7 @@ public final class MapLinksReader extends AbstractXMLReader {
         final int start = str.indexOf(GREATER_THAN); // start from first tag's end
         final int end = str.lastIndexOf(LESS_THAN); // end at last tag's start
         final String temp = str.substring(start + 1, end);
-        if (temp.trim().length() != 0) {
-            return true;
-        }
-        return false;
+        return temp.trim().length() != 0;
     }
     private final List<String> ancestorList;
     private String filePath = null;
@@ -78,12 +73,11 @@ public final class MapLinksReader extends AbstractXMLReader {
     private File inputFile;
     private final Set<String> lastMatchElement;
     private int level;
-    private final Map<String, Map<String,String> > map;
+    private final Map<File, Map<String,String> > map;
     private boolean match;
 
     /** Meta shows whether the event is in metadata when using sax to parse ditamap file. */
     private final List<String> matchList;
-    private boolean needResolveEntity;
     private XMLReader reader;
     private String topicPath;
     /** Whether the current href target is internal dita topic file. */
@@ -95,16 +89,15 @@ public final class MapLinksReader extends AbstractXMLReader {
      */
     public MapLinksReader() {
         super();
-        map = new HashMap<String, Map<String,String> >();
-        ancestorList = new ArrayList<String>(INT_16);
-        matchList = new ArrayList<String>(INT_16);
-        indexEntries = new StringBuffer(INT_1024);
+        map = new HashMap<File, Map<String,String> >();
+        ancestorList = new ArrayList<String>(16);
+        matchList = new ArrayList<String>(16);
+        indexEntries = new StringBuffer(1024);
         firstMatchElement = null;
         lastMatchElement = new HashSet<String>();
         level = 0;
         match = false;
         validHref = true;
-        needResolveEntity = false;
         topicPath = null;
         inputFile = null;
 
@@ -112,11 +105,9 @@ public final class MapLinksReader extends AbstractXMLReader {
             reader = StringUtils.getXMLReader();
             reader.setContentHandler(this);
             reader.setProperty(LEXICAL_HANDLER_PROPERTY,this);
-            reader.setFeature("http://apache.org/xml/features/scanner/notify-char-refs", true);
-            reader.setFeature("http://apache.org/xml/features/scanner/notify-builtin-refs", true);
             reader.setFeature("http://xml.org/sax/features/namespaces", false);
         } catch (final Exception e) {
-            logger.logError(e.getMessage(), e) ;
+            logger.error(e.getMessage(), e) ;
         }
 
     }
@@ -125,10 +116,8 @@ public final class MapLinksReader extends AbstractXMLReader {
     public void characters(final char[] ch, final int start, final int length)
             throws SAXException {
 
-        if (match && needResolveEntity && validHref) {
-            final String temp = new String(ch, start, length);
-            indexEntries.append(StringUtils.escapeXML(temp));
-
+        if (match && validHref) {
+            indexEntries.append(StringUtils.escapeXML(new String(ch, start, length)));
         }
     }
 
@@ -151,14 +140,6 @@ public final class MapLinksReader extends AbstractXMLReader {
             }
         }
         return true;
-    }
-
-    @Override
-    public void endCDATA() throws SAXException {
-        if (match && validHref){
-            indexEntries.append(CDATA_END);
-        }
-
     }
 
     @Override
@@ -188,41 +169,18 @@ public final class MapLinksReader extends AbstractXMLReader {
         if (qName.equals(firstMatchElement) && verifyIndexEntries(indexEntries) && topicPath != null) {
             // if the href is not valid, topicPath will be null. We don't need to set the condition
             // to check validHref at here.
-            /*
-                String origin = (String) map.get(topicPath);
-                if (origin != null) {
-                    map.put(topicPath, origin + indexEntries.toString());
-                } else {
-                    map.put(topicPath, indexEntries.toString());
-                }
-                indexEntries = new StringBuffer(INT_1024);
-             */
-            String t = topicPath;
-            String frag = SHARP;
-            //Get topic id
-            if (t.contains(SHARP)) {
-                frag = t.indexOf(SHARP) + 1 >= t.length() ?
-                        SHARP : t.substring(t.indexOf(SHARP) + 1);
-                //remove the "#" in topic file path
-                t = t.substring(0, t.indexOf(SHARP));
-            }
+            final File t = new File(FileUtils.stripFragment(topicPath));
+            final String frag = FileUtils.getFragment(topicPath, SHARP);
             Map<String, String> m = map.get(t);
             if (m != null) {
                 final String orig = m.get(frag);
                 m.put(frag, StringUtils.setOrAppend(orig, indexEntries.toString(), false));
             } else {
-                m = new HashMap<String, String>(INT_16);
+                m = new HashMap<String, String>(16);
                 m.put(frag, indexEntries.toString());
                 map.put(t, m);
             }
-            indexEntries = new StringBuffer(INT_1024);
-        }
-    }
-
-    @Override
-    public void endEntity(final String name) throws SAXException {
-        if(!needResolveEntity){
-            needResolveEntity = true;
+            indexEntries = new StringBuffer(1024);
         }
     }
 
@@ -231,7 +189,7 @@ public final class MapLinksReader extends AbstractXMLReader {
      * 
      * @return map of links by topic path
      */
-    public Map<String, Map<String, String>> getMapping() {
+    public Map<File, Map<String, String>> getMapping() {
     	return Collections.unmodifiableMap(map);
     }
     
@@ -240,34 +198,30 @@ public final class MapLinksReader extends AbstractXMLReader {
             throws SAXException {
 
         if (match && validHref) {
-            final String temp = new String(ch, start, length);
-            indexEntries.append(temp);
-
+            indexEntries.append(ch, start, length);
         }
     }
 
     @Override
-    public void read(final String filename) {
+    public void read(final File filename) {
         if (matchList.isEmpty()) {
             throw new IllegalStateException("matchList not initialized");
         }
 
         match = false;
-        needResolveEntity = true;
-        inputFile = new File(filename);
+        inputFile = filename;
         filePath = inputFile.getParent();
         inputFile.getPath();
         if(indexEntries.length() != 0){
             //delete all the content in indexEntries
-            indexEntries = new StringBuffer(INT_1024);
+            indexEntries = new StringBuffer(1024);
         }
 
         try {
-            reader.setErrorHandler(new DITAOTXMLErrorHandler(filename, logger));
-            final InputSource source=URIResolverAdapter.convertToInputSource(DitaURIResolverFactory.getURIResolver().resolve(filename, null));
-            reader.parse(source);
+            reader.setErrorHandler(new DITAOTXMLErrorHandler(filename.getPath(), logger));
+            reader.parse(new InputSource(filename.toURI().toString()));
         } catch (final Exception e) {
-            logger.logError(e.getMessage(), e) ;
+            logger.error(e.getMessage(), e) ;
         }
     }
 
@@ -279,7 +233,7 @@ public final class MapLinksReader extends AbstractXMLReader {
      */
     public void setMatch(final String matchPattern) {
         int index = 0;
-        firstMatchElement = (matchPattern.indexOf(SLASH) != -1) ? matchPattern.substring(0, matchPattern.indexOf(SLASH)) : matchPattern;
+        firstMatchElement = (matchPattern.contains(SLASH)) ? matchPattern.substring(0, matchPattern.indexOf(SLASH)) : matchPattern;
 
         while (index != -1) {
             final int start = matchPattern.indexOf(SLASH, index);
@@ -294,25 +248,11 @@ public final class MapLinksReader extends AbstractXMLReader {
         }
         matchList.add(firstMatchElement);
         final Iterator<String> it = lastMatchElement.iterator();
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         while(it.hasNext()){
-            sb.append(it.next() + STRING_BLANK);
+            sb.append(it.next()).append(STRING_BLANK);
         }
         matchList.add(sb.toString());
-    }
-
-    @Override
-    public void startCDATA() throws SAXException {
-        if (match && validHref){
-            indexEntries.append(CDATA_HEAD);
-        }
-
-    }
-
-    @Override
-    public void startDTD(final String name, final String publicId, final String systemId)
-            throws SAXException {
-        // NOOP
     }
 
     @Override
@@ -325,34 +265,25 @@ public final class MapLinksReader extends AbstractXMLReader {
         if (qName.equals(firstMatchElement)) {
             final String hrefValue = atts.getValue(ATTRIBUTE_NAME_HREF);
             if (verifyIndexEntries(indexEntries) && topicPath != null) {
-                /*
-                String origin = (String) map.get(topicPath);
-                map.put(topicPath, StringUtils.setOrAppend(origin, indexEntries.toString(), false));
-                 */
-                String t = topicPath;
-                String frag = SHARP;
-                if (t.contains(SHARP)) {
-                    frag = t.indexOf(SHARP) + 1 >= t.length() ?
-                            SHARP : t.substring(t.indexOf(SHARP) + 1);
-                    t = t.substring(0, t.indexOf(SHARP));
-                }
+                final File t = new File(FileUtils.stripFragment(topicPath));
+                final String frag = FileUtils.getFragment(topicPath, SHARP);
                 Map<String, String> m = map.get(t);
                 if (m != null) {
                     final String orig = m.get(frag);
                     m.put(frag, StringUtils.setOrAppend(orig, indexEntries.toString(), false));
                 } else {
-                    m = new HashMap<String, String>(INT_16);
+                    m = new HashMap<String, String>(16);
                     m.put(frag, indexEntries.toString());
                     map.put(t, m);
                 }
-                indexEntries = new StringBuffer(INT_1024);
+                indexEntries = new StringBuffer(1024);
             }
             topicPath = null;
-            if (hrefValue != null && hrefValue.indexOf(INTERNET_LINK_MARK) == -1
-                    && (attrScope == null || ATTR_SCOPE_VALUE_LOCAL.equalsIgnoreCase(attrScope))
-                    && (attrFormat == null || ATTR_FORMAT_VALUE_DITA.equalsIgnoreCase(attrFormat))) {
+            if (hrefValue != null && !hrefValue.contains(INTERNET_LINK_MARK)
+                    && (attrScope == null || ATTR_SCOPE_VALUE_LOCAL.equals(attrScope))
+                    && (attrFormat == null || ATTR_FORMAT_VALUE_DITA.equals(attrFormat))) {
                 // If the href is internal dita topic file
-                topicPath = FileUtils.resolveTopic(filePath, hrefValue);
+                topicPath = FileUtils.resolveTopic(new File(filePath), hrefValue);
                 validHref = true;
             }else{
                 //set up the boolean to prevent the invalid href's metadata inserted into indexEntries.
@@ -371,16 +302,15 @@ public final class MapLinksReader extends AbstractXMLReader {
 
         if (match) {
             if (validHref){
-                indexEntries.append(LESS_THAN + qName + STRING_BLANK);
+                indexEntries.append(LESS_THAN).append(qName);
 
                 for (int i = 0; i < attsLen; i++) {
+                    indexEntries.append(STRING_BLANK);
                     indexEntries.append(atts.getQName(i));
                     indexEntries.append(EQUAL);
                     indexEntries.append(QUOTATION);
                     indexEntries.append(StringUtils.escapeXML(atts.getValue(i)));
                     indexEntries.append(QUOTATION);
-                    indexEntries.append(STRING_BLANK);
-
                 }
 
                 indexEntries.append(GREATER_THAN);
@@ -390,24 +320,18 @@ public final class MapLinksReader extends AbstractXMLReader {
     }
 
     @Override
-    public void startEntity(final String name) throws SAXException {
-        needResolveEntity = StringUtils.checkEntity(name);
-        if (match && !needResolveEntity && validHref) {
-            indexEntries.append(StringUtils.getEntity(name));
-
-        }
-    }
-
-    @Override
     public void processingInstruction(final String target, final String data)
             throws SAXException {
-
-        final String pi = (data != null) ? target + STRING_BLANK + data : target;
-
-        if (match && needResolveEntity && validHref) {
-            final String temp = LESS_THAN + QUESTION
-                    + StringUtils.escapeXML(pi) + QUESTION + GREATER_THAN;
-            indexEntries.append(temp);
+        if (match && validHref) {
+            indexEntries.append(LESS_THAN)
+                         .append(QUESTION)
+                         .append(target);
+            if (data != null) {
+                indexEntries.append(STRING_BLANK)
+                            .append(StringUtils.escapeXML(data));
+            }
+            indexEntries.append(QUESTION)
+                         .append(GREATER_THAN);
         }
 
     }

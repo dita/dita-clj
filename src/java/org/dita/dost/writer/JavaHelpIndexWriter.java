@@ -10,6 +10,7 @@ package org.dita.dost.writer;
 
 import static javax.xml.transform.OutputKeys.*;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -18,7 +19,6 @@ import java.util.List;
 import javax.xml.transform.Transformer;
 
 import org.xml.sax.SAXException;
-
 import org.dita.dost.exception.DITAOTException;
 import org.dita.dost.index.IndexTerm;
 import org.dita.dost.index.IndexTermTarget;
@@ -32,10 +32,11 @@ import org.dita.dost.util.XMLSerializer;
  * 
  * @author Wu, Zhi Qiang
  */
+@SuppressWarnings("ForLoopReplaceableByForEach")
 public final class JavaHelpIndexWriter extends AbstractExtendDitaWriter {
 
     @Override
-    public void write(final String filename) throws DITAOTException {
+    public void write(final File filename) throws DITAOTException {
         OutputStream out = null;
         try {
             out = new FileOutputStream(filename);
@@ -47,8 +48,7 @@ public final class JavaHelpIndexWriter extends AbstractExtendDitaWriter {
             serializer.writeStartElement("index");
             serializer.writeAttribute("version", "1.0");
             final int termNum = termList.size();
-            for (int i = 0; i < termNum; i++) {
-                final IndexTerm term = termList.get(i);
+            for (final IndexTerm term : termList) {
                 outputIndexTerm(term, serializer);
             }
             serializer.writeEndElement(); // index
@@ -60,7 +60,7 @@ public final class JavaHelpIndexWriter extends AbstractExtendDitaWriter {
                 try {
                     out.close();
                 } catch (final IOException e) {
-                    logger.logError(e.getMessage(), e) ;
+                    logger.error(e.getMessage(), e) ;
                 }
             }
         }
@@ -92,12 +92,7 @@ public final class JavaHelpIndexWriter extends AbstractExtendDitaWriter {
             for (int i = 0; i < targetNum; i++) {
                 final IndexTermTarget target = targets.get(i);
                 String targetURL = target.getTargetURI();
-                // Remove file extension from targetName, and replace all the
-                // file seperator with '_'.
-                targetURL = targetURL.substring(0, targetURL.lastIndexOf("."));
-                targetURL = targetURL.replace('\\', '_');
-                targetURL = targetURL.replace('/', '_');
-                targetURL = targetURL.replace('.', '_');
+                targetURL = targetURL.substring(0, targetURL.lastIndexOf(".")).replace('\\', '_').replace('/', '_').replace('.', '_');
 
                 serializer.writeStartElement("indexitem");
                 serializer.writeAttribute("text", term.getTermFullName());
@@ -114,9 +109,7 @@ public final class JavaHelpIndexWriter extends AbstractExtendDitaWriter {
      */
     @Override
     public String getIndexFileName(final String outputFileRoot) {
-        final StringBuffer indexFilename = new StringBuffer(outputFileRoot);
-        indexFilename.append("_index.xml");
-        return indexFilename.toString();
+        return outputFileRoot + "_index.xml";
     }
 
 }

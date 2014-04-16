@@ -12,8 +12,8 @@ import static org.dita.dost.util.Constants.*;
 
 import java.io.File;
 import java.util.Map;
+
 import org.dita.dost.exception.DITAOTException;
-import org.dita.dost.log.DITAOTLogger;
 import org.dita.dost.pipeline.AbstractPipelineInput;
 import org.dita.dost.pipeline.AbstractPipelineOutput;
 import org.dita.dost.reader.MapLinksReader;
@@ -26,14 +26,7 @@ import org.dita.dost.writer.DitaLinksWriter;
  * 
  * @author Zhang, Yuan Peng
  */
-final class MoveLinksModule implements AbstractPipelineModule {
-
-    private DITAOTLogger logger;
-
-    @Override
-    public void setLogger(final DITAOTLogger logger) {
-        this.logger = logger;
-    }
+final class MoveLinksModule extends AbstractPipelineModuleImpl {
 
     /**
      * execution point of MoveLinksModule.
@@ -44,29 +37,25 @@ final class MoveLinksModule implements AbstractPipelineModule {
      */
     @Override
     public AbstractPipelineOutput execute(final AbstractPipelineInput input) throws DITAOTException {
-        if (logger == null) {
-            throw new IllegalStateException("Logger not set");
-        }
-        
         final File maplinksFile = new File(input.getAttribute(ANT_INVOKER_PARAM_MAPLINKS));
+        if (!maplinksFile.exists()) {
+            return null;
+        }
         
         final MapLinksReader indexReader = new MapLinksReader();
         indexReader.setLogger(logger);
-        indexReader.setMatch(new StringBuffer(ELEMENT_NAME_MAPLINKS)
-                .append(SLASH).append(TOPIC_LINKPOOL.localName)
-                .append(SLASH).append(TOPIC_LINKLIST.localName)
-                .toString());
-        indexReader.read(maplinksFile.getAbsolutePath());
-        final Map<String, Map<String, String>> mapSet = indexReader.getMapping();
+        indexReader.setMatch(ELEMENT_NAME_MAPLINKS + SLASH + TOPIC_LINKPOOL.localName + SLASH + TOPIC_LINKLIST.localName);
+        indexReader.read(maplinksFile.getAbsoluteFile());
+        final Map<File, Map<String, String>> mapSet = indexReader.getMapping();
         
-        final DitaLinksWriter indexInserter = new DitaLinksWriter();
-        indexInserter.setLogger(logger);
-        for (final Map.Entry<String, Map<String, String>> entry: mapSet.entrySet()) {
-            logger.logInfo("Processing " + entry.getKey());
-            final ContentImpl content = new ContentImpl();
-            content.setValue(entry.getValue());
-            indexInserter.setContent(content);
-            indexInserter.write(entry.getKey());
+        if (!mapSet.isEmpty()) {
+            final DitaLinksWriter indexInserter = new DitaLinksWriter();
+            indexInserter.setLogger(logger);
+            for (final Map.Entry<File, Map<String, String>> entry: mapSet.entrySet()) {
+                logger.info("Processing " + entry.getKey());
+                indexInserter.setLinks(entry.getValue());
+                indexInserter.write(entry.getKey());
+            }
         }
         return null;
     }

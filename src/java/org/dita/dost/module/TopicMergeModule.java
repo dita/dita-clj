@@ -25,7 +25,6 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.dita.dost.exception.DITAOTException;
-import org.dita.dost.log.DITAOTLogger;
 import org.dita.dost.log.MessageUtils;
 import org.dita.dost.pipeline.AbstractPipelineInput;
 import org.dita.dost.pipeline.AbstractPipelineOutput;
@@ -34,9 +33,7 @@ import org.dita.dost.reader.MergeMapParser;
 /**
  * The module handles topic merge in issues as PDF.
  */
-final class TopicMergeModule implements AbstractPipelineModule {
-
-    private DITAOTLogger logger;
+final class TopicMergeModule extends AbstractPipelineModuleImpl {
 
     /**
      * Default Constructor.
@@ -44,11 +41,6 @@ final class TopicMergeModule implements AbstractPipelineModule {
      */
     public TopicMergeModule() {
         super();
-    }
-
-    @Override
-    public void setLogger(final DITAOTLogger logger) {
-        this.logger = logger;
     }
 
     /**
@@ -64,24 +56,16 @@ final class TopicMergeModule implements AbstractPipelineModule {
         if (logger == null) {
             throw new IllegalStateException("Logger not set");
         }
-        final String ditaInput = input
-                .getAttribute(ANT_INVOKER_PARAM_INPUTMAP);
-        final String style = input
-                .getAttribute(ANT_INVOKER_EXT_PARAM_STYLE);
-        final String out = input
-                .getAttribute(ANT_INVOKER_EXT_PARAM_OUTPUT);
-        final String tempdir = input
-                .getAttribute(ANT_INVOKER_PARAM_TEMPDIR);
+        final File ditaInput = new File(input.getAttribute(ANT_INVOKER_PARAM_INPUTMAP));
+        final File style = input.getAttribute(ANT_INVOKER_EXT_PARAM_STYLE) != null ? new File(input.getAttribute(ANT_INVOKER_EXT_PARAM_STYLE)) : null;
+        final File out = new File(input.getAttribute(ANT_INVOKER_EXT_PARAM_OUTPUT));
         final MergeMapParser mapParser = new MergeMapParser();
         mapParser.setLogger(logger);
+        mapParser.setJob(job);
+        mapParser.setOutput(out.getAbsoluteFile());
 
-        if (ditaInput == null || !new File(ditaInput).exists()){
-            logger.logError(MessageUtils.getInstance().getMessage("DOTJ025E").toString());
-            return null;
-        }
-
-        if ( out == null ){
-            logger.logError(MessageUtils.getInstance().getMessage("DOTJ026E").toString());
+        if (!ditaInput.exists()){
+            logger.error(MessageUtils.getInstance().getMessage("DOTJ025E").toString());
             return null;
         }
 
@@ -91,7 +75,7 @@ final class TopicMergeModule implements AbstractPipelineModule {
             midBuffer.write(XML_HEAD.getBytes(UTF8));
             midBuffer.write("<dita-merge xmlns:ditaarch=\"http://dita.oasis-open.org/architecture/2005/\">".getBytes(UTF8));
             mapParser.setOutputStream(midBuffer);
-            mapParser.read(ditaInput, tempdir);
+            mapParser.read(ditaInput, job.tempDir);
             midBuffer.write("</dita-merge>".getBytes(UTF8));
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e);
@@ -102,22 +86,21 @@ final class TopicMergeModule implements AbstractPipelineModule {
                 try {
                     midBuffer.close();
                 } catch (final IOException e) {
-                    logger.logError("Failed to close output buffer: " + e.getMessage(), e);
+                    logger.error("Failed to close output buffer: " + e.getMessage(), e);
                 }
             }
         }
 
         OutputStream output = null;
         try{
-            final File outputDir = new File(out).getParentFile();
+            final File outputDir = out.getParentFile();
             if (!outputDir.exists()){
                 outputDir.mkdirs();
             }
             output = new BufferedOutputStream(new FileOutputStream(out));
             if (style != null){
                 final TransformerFactory factory = TransformerFactory.newInstance();
-                final File styleFile = new File(style);
-                final Transformer transformer = factory.newTransformer(new StreamSource(styleFile.toURI().toString()));
+                final Transformer transformer = factory.newTransformer(new StreamSource(style.toURI().toString()));
                 transformer.transform(new StreamSource(new ByteArrayInputStream(midBuffer.toByteArray())),
                                       new StreamResult(output));
             }else{
@@ -132,7 +115,7 @@ final class TopicMergeModule implements AbstractPipelineModule {
                     output.close();
                 }
             }catch (final Exception e){
-                logger.logError("Failed to close output buffer: " + e.getMessage(), e);
+                logger.error("Failed to close output buffer: " + e.getMessage(), e);
             }
         }
 

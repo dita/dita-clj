@@ -35,7 +35,7 @@ public final class GrammarPoolManager {
         return pool;
     }
 
-    private static ThreadLocal<XMLGrammarPool> grammarPool = new ThreadLocal<XMLGrammarPool>() {
+    private static final ThreadLocal<XMLGrammarPool> grammarPool = new ThreadLocal<XMLGrammarPool>() {
 
 
     };
@@ -58,6 +58,6 @@ public final class GrammarPoolManager {
     public static void setGramCache(final boolean gramCache) {
         GrammarPoolManager.gramCache = gramCache;
     }
-
+    
 }
 

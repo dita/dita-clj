@@ -1,0 +1,10 @@
+The DITA Open Toolkit is licensed for use, at the user's election,
+under the
+[Common Public License](http://www.opensource.org/licenses/cpl1.0.php)
+1.0 (CPL) or
+[Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+The Clojure and leiningen portions of dita-clj are Copyright © 2013
+Gregg Reynolds and distributed under the Eclipse Public License either
+version 1.0 or (at your option) any later version.
+

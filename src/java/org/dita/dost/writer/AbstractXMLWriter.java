@@ -8,11 +8,11 @@
  */
 package org.dita.dost.writer;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.dita.dost.exception.DITAOTException;
 import org.dita.dost.log.DITAOTLogger;
-import org.dita.dost.module.Content;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.EntityResolver;
@@ -118,17 +118,13 @@ ContentHandler, LexicalHandler, EntityResolver {
             throws SAXException, IOException {
         return null;
     }
-
+    
     @Override
-    public void setContent(final Content content) {
-    }
-
-    @Override
-    public abstract void write(String filename) throws DITAOTException;
+    public abstract void write(File filename) throws DITAOTException;
 
     @Override
     public final void setLogger(final DITAOTLogger logger) {
         this.logger = logger;
     }
-
+    
 }
