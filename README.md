@@ -98,11 +98,7 @@ immutable "kernel" of the toolkit, and it should be easy to examine
 and fix.
 
 **dita-clj support for plugins**: to be determined; see
-doc/plugins.md.  But ideally, follow the standard pattern: put system
-level stuff somewhere like `/etc`, local stuff somewher in
-`/usr/local`, and user stuff somewhere in `~/`, like `~/.dita`.
-(Presumably there is some kind of analogous best-practice for
-Windows.)
+doc/extensions.md.
 
 ## Usage
 
