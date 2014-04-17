@@ -25,8 +25,26 @@ put mutable configuration data like this somewhere in the `/var`
 hierarchy.  Windows, I dunno, but in any case it should not be
 embedded in the toolkit installation proper (IMHO).
 
-DITA-OT uses static "extension points".  This means plugins modify the
-toolkit.
+DITA-OT seems to use static "extension points", but actually many of
+them are defined by plugins.
+
+Plugins modify the toolkit.  Basically the vanilla toolkit is generic
+and running ant -f integrate specializes it.  The ant files play a
+critical role; they are what controls processing, and `ant -f
+integrate` generates the runtime ant files from generic skeletons plus
+plugin specializations.
+
+The generic part works something like: specify an extension point,
+plus an ant task to implement it, and the integration process will
+incorporate your ant file into the toolkit ant library.  When somebody
+else comes along they can use your extension point and ant task.
+
+constraints on user-defined extension points: only allowed in
+post-processing?  you cannot insert a new extension point in the
+preprocessing pipeline?
+
+dita-ot uses ant for job control; since ant is java by another syntax,
+this means that it uses java for job control.
 
 dita-clj pursues a different strategy, using "hooks" to support
 runtime-only extensions.  Each project can hang bits of code on the
@@ -49,10 +67,76 @@ Using plugins: the hook mechanism will be enabled by leiningen
 keywords in the project.clj file for each project.  See the leiningen
 template dita-template.
 
-# DITA-OT Extensions - implementation notes
+# DITA-OT Extensions - implementation notes (v2.0)
 
-    Extension-point : doc : Impl
-	========================================================================================
+There are five plugin "functions":
+
+* extension-point: defines a new ext-pt that other plugins can use
+* feature: hangs some code on an extension point
+* require: sets dependencies
+* template
+* meta
+
+`ant -f integrate` runs `org.dita.dost.platform.IntegratorTask` which
+processes all the plugin.xml files (?)
+
+`plugin.xml` files read by `org.dita.dost.platform.Integrator$execute`
+
+plugins/org.dita.base/plugin.xml seems to define basic ext pts
+
+**NOTE** not all of the ext pts are documented at
+  [Creating DITA-OT plug-ins](http://dita-ot.github.io/2.0/dev_ref/plugins-overview.html)
+
+For example, recognized file extensions are set by defining ext pts
+like `dita.html.extensions` and then defining "features" on that ext
+pt, e.g. with values "html" and "htm".  But some are hardcoded;
+e.g. file extensions in util/Constants.java.  Some are "hardcoded" in
+the ant build_template.xml file as dita:extension elements.
+
+This seems like a terribly convoluted way to do something very simple.
+
+Feature names defined by `org.dita.dost.platform.Integrator`:
+
+    CONF_PLUGIN_IGNORES = "plugin.ignores";
+    CONF_PLUGIN_DIRS = "plugindirs";
+    FEAT_TOPIC_EXTENSIONS = "dita.topic.extensions";
+    FEAT_MAP_EXTENSIONS = "dita.map.extensions";
+    FEAT_IMAGE_EXTENSIONS = "dita.image.extensions";
+    FEAT_HTML_EXTENSIONS = "dita.html.extensions";
+    FEAT_RESOURCE_EXTENSIONS = "dita.resource.extensions";
+    FEAT_PRINT_TRANSTYPES = "dita.transtype.print"; // transform types
+
+`org.dita.dost.platform.Integrator` plugin processing:
+
+1.  Find plugin.xml files
+2.  [integrate] Read plug-in configuration /path/to/plugin.xml"
+ 1. Parse "description file" of plugin: platform/DescParser.java yielding
+3.  "Integrate" plugin files
+ 1. load plugins
+ 2. foreach "template" spec:  [integrate] Process template /path/to/..._template.xsl  (which means fileGen.generate(templateFile))
+ 3.  [integrate] Generate configuration properties: org.dita.dost.platform/plugin.properties
+
+So what does "integration" do?  basically it "compiles" stuff to
+create files to be read at runtime.
+
+1. template files "compile" to runtime files
+1. plugins "compile" to the plugin.properties file, which is read at runtime and determines what extensions are available etc.
+
+NB: in messages like"[integrate] Failed to read supported <..> extensions from configuration, using defaults." the term "extension" refers to file extensions like .jpg. (see util/FileUtils.java)
+
+
+**NB** Some extension points are predefined (= in
+  org.dita.base/plugin.xml?), but plugins can define extension points.
+  For example, `plugins/org.dita.xhtml` plugin defines the following
+  extension points:
+
+	<extension-point id="dita.xsl.xhtml" name="HTML/XHTML XSLT import"/>
+	<extension-point id="dita.conductor.html.param" name="HTML XSLT parameters"/>
+	<extension-point id="dita.conductor.xhtml.param" name="XHTML XSLT parameters"/>
+	<extension-point id="dita.conductor.xhtml.toc.param" name="HTML/XSLT XSLT parameter"/>
+	<extension-point id="dita.xsl.htmltoc" name="HTML/XHTML TOC XSLT import"/>
+
+Extension-point : doc : Impl
 
     dita.specialization.catalog.relative : add the content cat file to main DITA-OT catalog file.
 
@@ -72,9 +156,29 @@ template dita-template.
 	    org.dita.dost.platform.ListTranstypeAction
 		org.dita.dost.platform.CheckTranstypeAct (prop transtype)
 
+
+XSLT parameter passing:
+
+    dita.conductor.xhtml.toc.param  : see plugins/org.dita.xhtml/build_dita2xhtml_template.xml
+	    org.dita.dost.platform.InsertAction
+
+    dita.conductor.xhtml.param : behavior="org.dita.dost.platform.InsertAction
+    dita.conductor.html.param : behavior="org.dita.dost.platform.InsertAction
+
+
     dita.transtype.print : declare transtype as a print type
 
     dita.xsl.xhtml : overrides default (X)HTML output (including HTML Help and Eclipse Help)
+
+e.g.   <feature extension="dita.xsl.xhtml"
+      file="xsl/apiref2xhtml.xsl"/>
+
+XSLT Overrides etc: XSLT "template" files contain a dita:extension
+element mapping extension point to implementation, e.g. in main/plugins/org.dita.xhtml/xsl/dita2html-base_template.xsl:
+
+    <dita:extension id="dita.xsl.xhtml"
+	behavior="org.dita.dost.platform.ImportXSLAction"
+	xmlns:dita="http://dita-ot.sourceforge.net"/>
 
     dita.xsl.xslfo : Overrides default PDF output (formerly known as PDF2).
 
