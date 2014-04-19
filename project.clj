@@ -3,14 +3,16 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :javac-options ["-target" "1.7" "-source" "1.7"] ;; "-Xlint:deprecation"]
-  :compile-path "target/classes"
+  :main ^:skip-aot dita.core
+  :source-paths ["src/clj"]
+  :java-source-paths ["src/java"]
   :target-path "target/%s/lib" ;; jar goes here
   :clean-targets [:compile-path "target"]
-  :java-source-paths ["src/java"]
   :resource-paths ["resources"] ;; ["src/main/resource"]
   :java-source-exclude ["org/dita/dost/invoker/JavaInvoker.java"
                         "org/dita/dost/invoker/CommandLineInvoker.java"]
+  :javac-options ["-target" "1.7" "-source" "1.7"] ;; "-Xlint:deprecation"]
+  :compile-path "target/classes"
   :omit-source true  ;; don't put source in jar
   ;; :jar-name "dost.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
