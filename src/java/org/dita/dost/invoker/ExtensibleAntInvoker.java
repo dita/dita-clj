@@ -312,7 +312,7 @@ public final class ExtensibleAntInvoker extends Task {
             this.destDir = destDir;
         }
         
-        public void setTaskname(final String taskname) {
+        public void estTaskname(final String taskname) {
         }
         
         public void setClasspathref(final String classpath) {

@@ -38,7 +38,9 @@ public final class MessageUtils {
     private static final String ELEMENT_RESPONSE = "response";
     private static final String ATTRIBUTE_ID = "id";
     private static final String ATTRIBUTE_TYPE = "type";
-    private static final String defaultResource = "resource/messages.xml";
+    private static final String defaultResource = "resources/messages/messages.xml";
+
+    //gar TODO: parameterize the resources dir and the messages filename
 
     // Variables
 
@@ -59,6 +61,7 @@ public final class MessageUtils {
      * @return MessageUtils singleton instance
      */
     public static synchronized MessageUtils getInstance(){
+// System.out.println("MessageUtils.getInstance"); // gar
         if(utils == null){
             utils = new MessageUtils();
             utils.loadDefaultMessages();
@@ -73,15 +76,21 @@ public final class MessageUtils {
      *
      */
     void loadDefaultMessages() {
+// System.out.println("MessageUtils.loadDefaultMessages"); // gar
 		InputStream msg = null;
 		try {
 		    if (new File(MessageUtils.defaultResource).exists()) {
+// System.out.println("MessageUtils: " + MessageUtils.defaultResource + " exists"); // gar
 		    	msg = new FileInputStream(new File(MessageUtils.defaultResource));
 		    } else {
+// System.out.println("MessageUtils: " + MessageUtils.defaultResource + " does not exist"); // gar
 		    	msg = this.getClass().getClassLoader().getResourceAsStream(MessageUtils.defaultResource);
 			}
 		    if (msg != null) {
+// System.out.println("MessageUtils: got stream"); // gar
 		        loadMessages(msg);
+		    } else {
+// System.out.println("MessageUtils: fail "); // gar
 		    }
 		} catch (final Exception e) {
 		    throw new RuntimeException("Failed to load messages configuration file: " + e.getMessage(), e);
@@ -101,6 +110,7 @@ public final class MessageUtils {
      * @param in message file input stream
      */
     void loadMessages(final InputStream in) throws Exception {
+System.out.println("MessageUtils.loadMessages: " + MessageUtils.defaultResource); // gar
     	synchronized (hashTable) {
     		hashTable.clear();
 	        try {
@@ -143,6 +153,7 @@ public final class MessageUtils {
      * @return messageBean
      */
     private MessageBean getMessage(final String id) {
+// System.out.println("MessageUtils.getMessage : " + id); // gar
         if (hashTable == null) {
         	throw new IllegalStateException("Messages have not been loaded");
         }

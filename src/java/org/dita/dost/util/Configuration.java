@@ -24,7 +24,7 @@ import org.dita.dost.platform.Integrator;
 
 /**
  * Global configuration object for static configurations.
- * 
+ *
  * @since 1.5.3
  * @author Jarno Elovirta
  */
@@ -34,14 +34,14 @@ public final class Configuration {
 
     /**
      * Immutable configuration properties.
-     * 
+     *
      * <p>If configuration file is not found e.g. during integration, the
      * configuration will be an empty.</p>
      */
     public final static Map<String, String> configuration;
     static {
         final Map<String, String> c = new HashMap<String, String>();
-        
+
         final Properties pluginProperties = new Properties();
         InputStream plugingConfigurationInputStream = null;
         try {
@@ -70,7 +70,7 @@ public final class Configuration {
         for (final Map.Entry<Object, Object> e: pluginProperties.entrySet()) {
             c.put(e.getKey().toString(), e.getValue().toString());
         }
-        
+
         final Properties properties = new Properties();
         InputStream configurationInputStream = null;
         try {
@@ -99,7 +99,7 @@ public final class Configuration {
         for (final Map.Entry<Object, Object> e: properties.entrySet()) {
             c.put(e.getKey().toString(), e.getValue().toString());
         }
-        
+
         configuration = Collections.unmodifiableMap(c);
     }
 
@@ -107,17 +107,17 @@ public final class Configuration {
     public enum Mode {
         STRICT, SKIP, LAX
     }
-    
+
     public static final Mode processingMode;
     static {
         final String mode = Configuration.configuration.get("processing-mode");
         processingMode = mode != null ? Mode.valueOf(mode.toUpperCase()) : Mode.LAX;
     }
-    
+
     /** Private constructor to disallow instance creation. */
     private Configuration() {
     }
-    
+
     /** List of print-oriented transtypes. */
     public static final List<String> printTranstype;
     static {
@@ -148,5 +148,5 @@ public final class Configuration {
         }
         pluginResourceDirs = Collections.unmodifiableMap(ps);
     }
-    
+
 }

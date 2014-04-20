@@ -39,6 +39,7 @@ public final class CatalogUtils {
      * @param ditaDir ditaDir
      */
     public static synchronized void setDitaDir(final File ditaDir){
+	System.out.println("setting ditaDir to " + ditaDir.getAbsolutePath());
         catalogResolver=null;
         CatalogUtils.ditaDir=ditaDir;
     }
@@ -53,11 +54,14 @@ public final class CatalogUtils {
             manager.setIgnoreMissingProperties(true);
             manager.setUseStaticCatalog(false); // We'll use a private catalog.
             manager.setPreferPublic(true);
-            final File catalogFilePath = new File(ditaDir, Configuration.pluginResourceDirs.get("org.dita.base") + File.separator + FILE_NAME_CATALOG);
+            final File catalogFilePath = new File(ditaDir,
+						  //gar Configuration.pluginResourceDirs.get("org.dita.base") +
+						  File.separator + FILE_NAME_CATALOG);
             manager.setCatalogFiles(catalogFilePath.toURI().toASCIIString());
             //manager.setVerbosity(10);
             catalogResolver = new CatalogResolver(manager);
         }
+// System.out.println("catalog: " + catalogResolver.getCatalog().getCurrentBase()); // gar
 
         return catalogResolver;
     }

@@ -73,9 +73,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * This class extends AbstractPipelineModule, used to generate map and topic
  * list by parsing all the refered dita files.
- * 
+ *
  * @version 1.0 2004-11-25
- * 
+ *
  * @author Wu, Zhi Qiang
  */
 public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
@@ -185,7 +185,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
     private boolean xmlValidate = true;
     private ContentHandler nullHandler;
     private FilterUtils filterUtils;
-    
+
     /** Absolute path to input file. */
     private File rootFile;
     /** File currently being processed */
@@ -205,7 +205,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Create a new instance and do the initialization.
-     * 
+     *
      * @throws ParserConfigurationException never throw such exception
      * @throws SAXException never throw such exception
      */
@@ -255,7 +255,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
             initFilters();
             initXMLReader(ditaDir, xmlValidate, rootFile);
-            
+
             addToWaitList(inputFile);
             processWaitList();
             // Depreciated function
@@ -274,11 +274,11 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
         return null;
     }
-    
+
     /**
      * Initialize reusable filters.
-     * @throws IOException 
-     * @throws SAXException 
+     * @throws IOException
+     * @throws SAXException
      */
     private void initFilters() {
         listFilter = new GenListModuleReader();
@@ -288,21 +288,21 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         listFilter.setInputFile(rootFile.getAbsoluteFile());
         listFilter.setInputDir(rootFile.getAbsoluteFile().getParentFile());//baseInputDir
         listFilter.setJob(job);
-        
+
         exportAnchorsFilter = new ExportAnchorsFilter();
         exportAnchorsFilter.setInputFile(rootFile.getAbsoluteFile().toURI());
-        
+
         keydefFilter = new KeydefFilter();
         keydefFilter.setLogger(logger);
         keydefFilter.setInputFile(rootFile.getAbsoluteFile().toURI());
         keydefFilter.setJob(job);
-        
+
         nullHandler = new DefaultHandler();
     }
 
     /**
      * Init xml reader used for pipeline parsing.
-     * 
+     *
      * @param ditaDir absolute path to DITA-OT directory
      * @param validate whether validate input file
      * @param rootFile absolute path to input file
@@ -338,9 +338,10 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         CatalogUtils.setDitaDir(ditaDir);
         reader.setEntityResolver(CatalogUtils.getCatalogResolver());
     }
-    
+
     private void parseInputParameters(final AbstractPipelineInput input) throws IOException {
         ditaDir = new File(input.getAttribute(ANT_INVOKER_EXT_PARAM_DITADIR));
+	System.out.println("DITADIR: " + ditaDir.getAbsolutePath());
         if (input.getAttribute(ANT_INVOKER_PARAM_DITAVAL) != null) {
             ditavalFile = new File(input.getAttribute(ANT_INVOKER_PARAM_DITAVAL));
         }
@@ -375,7 +376,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
             }
             baseInputDir = inDir.getCanonicalFile();
         }
-        
+
         final String ditaInput = input.getAttribute(ANT_INVOKER_PARAM_INPUTMAP);
         File inFile = new File(ditaInput);
         if (!inFile.isAbsolute()) {
@@ -402,7 +403,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         }
 
         rootFile = inFile.getCanonicalFile();
-       
+
         inputFile = new File(FileUtils.getRelativeUnixPath(new File(baseInputDir, "x").getAbsolutePath(), inFile.getAbsolutePath()));
         // create the keydef file for scheme files
     	schemekeydefMap = new HashMap<String, KeyDef>();
@@ -417,14 +418,14 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         }
 
         while (!waitList.isEmpty()) {
-        	currentFile = waitList.remove(0); 
+        	currentFile = waitList.remove(0);
             processFile(currentFile);
         }
     }
-    
+
     /**
      * Get pipe line filters
-     * 
+     *
      * @param fileToParse absolute path to current file being processed
      * @param file relative path to current file being processed, relative to start document parent directory
      */
@@ -458,7 +459,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Read a file and process it for list information.
-     * 
+     *
      * @param currentFile system path of the file to process
      * @throws DITAOTException if processing failed
      */
@@ -489,7 +490,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
             prop.put("%1", fileToParse);
             logger.warn(MessageUtils.getInstance().getMessage("DOTJ053W", params).toString());
         }
-        
+
         try {
             XMLReader xmlSource = reader;
             for (final XMLFilter f: getProcessingPipe(fileToParse, file)) {
@@ -497,9 +498,9 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
                 f.setEntityResolver(CatalogUtils.getCatalogResolver());
                 xmlSource = f;
             }
-            
-            xmlSource.setContentHandler(nullHandler);            
-            
+
+            xmlSource.setContentHandler(nullHandler);
+
             xmlSource.parse(fileToParse.toURI().toString());
 
             // don't put it into dita.list if it is invalid
@@ -512,6 +513,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         } catch (final SAXParseException sax) {
             // To check whether the inner third level is DITAOTBuildException
             // :FATALERROR
+
             final Exception inner = sax.getException();
             if (inner != null && inner instanceof DITAOTException) {// second
                 // level
@@ -526,6 +528,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
             final String buff = MessageUtils.getInstance().getMessage("DOTJ013E", params).toString() + LINE_SEPARATOR + sax.getMessage();
             logger.error(buff, sax);
         } catch (final Exception e) {
+System.out.println("ERR: " + e.getMessage());
             if (file.equals(inputFile)) {
                 // stop the build if exception thrown when parsing input file.
                 final String msg = MessageUtils.getInstance().getMessage("DOTJ012F", params).toString() + ": " + e.getMessage();
@@ -607,7 +610,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
                  * keydef.write("href=\""+value+"\" ");
                  * keydef.write("source=\""+currentFile+"\"/>");
                  * keydef.write("\n"); keydef.flush(); } catch (IOException e) {
-                 * 
+                 *
                  * logger.logError(e.getMessage(), e) ; }
                  */
                 keysDefMap.put(key, new KeyDef(key, value.href, value.scope, toURI(currentFile)));
@@ -651,7 +654,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Categorize current file type
-     * 
+     *
      * @param currentFile file path
      */
     private void categorizeCurrentFile(final File currentFile) {
@@ -696,12 +699,12 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Categorize file.
-     * 
+     *
      * If {@code file} parameter contains a pipe character, the pipe character is followed
      * by the format of the file.
-     * 
+     *
      * TODO: Pass format as separate DITA class parameter.
-     * 
+     *
      * @param file file system path with optional format
      */
     private void categorizeResultFile(final Reference file) {
@@ -723,9 +726,9 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
             htmlSet.add(new File(file.filename));
         }
         if (FileUtils.isSupportedImageFile(lcasefn)) {
-        	imageSet.add(new File(file.filename));        	      	
+        	imageSet.add(new File(file.filename));
 			try {
-				final File image = new File (baseInputDir, file.filename).getCanonicalFile(); 
+				final File image = new File (baseInputDir, file.filename).getCanonicalFile();
 				if (!image.exists()){
 					logger.warn(MessageUtils.getInstance().getMessage("DOTX008W", image.getAbsolutePath()).toString());
 	            }
@@ -742,7 +745,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
     /**
      * Update uplevels if needed. If the parameter contains a {@link org.dita.dost.util.Constants#STICK STICK}, it and
      * anything following it is removed.
-     * 
+     *
      * @param file file path
      */
     private void updateUplevels(final File file) {
@@ -759,7 +762,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Add the given file the wait list if it has not been parsed.
-     * 
+     *
      * @param file relative system path
      */
     private void addToWaitList(final File file) {
@@ -782,7 +785,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Get up-levels relative path.
-     * 
+     *
      * @return path to up-level, e.g. {@code ../../}
      */
     private String getUpdateLevels() {
@@ -795,7 +798,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Escape regular expression special characters.
-     * 
+     *
      * @param value input
      * @return input with regular expression special characters escaped
      */
@@ -854,7 +857,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Parse filter file
-     * 
+     *
      * @return configured filter utility
      */
     private FilterUtils parseFilterFile() {
@@ -949,16 +952,16 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Write result files.
-     * 
+     *
      * @throws DITAOTException if writing result files failed
      */
     private void outputResult() throws DITAOTException {
         if (!job.tempDir.exists()) {
             job.tempDir.mkdirs();
         }
-        
+
         // assume empty Job
-        
+
         job.setProperty(INPUT_DIR, baseInputDir.getAbsolutePath());
         job.setProperty(INPUT_DITAMAP, prefix + inputFile);
 
@@ -1003,7 +1006,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         for (final File file: addFilePrefix(fullMapSet)) {
             final FileInfo ff = job.getOrCreateFileInfo(file);
             ff.format = ATTR_FORMAT_VALUE_DITAMAP;
-        }        
+        }
         for (final File file: addFilePrefix(hrefTopicSet)) {
             job.getOrCreateFileInfo(file).hasLink = true;
         }
@@ -1054,7 +1057,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         for (final File file: addFilePrefix(resourceOnlySet)) {
             job.getOrCreateFileInfo(file).isResourceOnly = true;
         }
-        
+
         addFlagImagesSetToProperties(job, relFlagImagesSet);
 
         // Convert copyto map into set and output
@@ -1067,7 +1070,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         } catch (final IOException e) {
             throw new DITAOTException("Failed to serialize job configuration files: " + e.getMessage(), e);
         }
-        
+
         // Output relation-graph
         writeMapToXML(listFilter.getRelationshipGrap(), FILE_NAME_SUBJECT_RELATION);
         // Output topic-scheme dictionary
@@ -1131,13 +1134,13 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
         KeyDef.writeKeydef(new File(job.tempDir, SUBJECT_SCHEME_KEYDEF_LIST_FILE), schemekeydefMap.values());
     }
-    
+
     /**
      * Write map of sets to a file.
-     * 
+     *
      * <p>The serialization format is XML properties format where values are comma
      * separated lists.</p>
-     * 
+     *
      * @param m map to serialize
      * @param filename output filename
      */
@@ -1172,7 +1175,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
     /**
      * Add file prefix. For absolute paths the prefix is not added.
-     * 
+     *
      * @param set file paths
      * @return file paths with prefix
      */
@@ -1187,10 +1190,10 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         }
         return newSet;
     }
-    
+
     /**
      * Add file prefix. For absolute paths the prefix is not added.
-     * 
+     *
      * @param set file paths
      * @return file paths with prefix
      */
@@ -1203,7 +1206,7 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
             } else {
                 key = FileUtils.normalize(prefix + file.getKey());
             }
-            File value = null; 
+            File value = null;
             if (file.getValue().isAbsolute()) {
                 value = FileUtils.normalize(file.getValue());
             } else {
@@ -1213,10 +1216,10 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
         }
         return newSet;
     }
-    
+
     /**
      * Add key definition to job configuration
-     * 
+     *
      * @param prop job configuration
      * @param keydefs key defintions to add
      */
@@ -1302,5 +1305,5 @@ public final class GenMapAndTopicListModule extends AbstractPipelineModuleImpl {
 
         prop.setProperty(org.dita.dost.util.Constants.REL_FLAGIMAGE_LIST, StringUtils.join(newSet, COMMA));
     }
-    
+
 }
