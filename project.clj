@@ -4,6 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :main ^:skip-aot dita.core
+  :aot [org.dita.dost.util.Configuration]
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]
   :target-path "target/%s/lib" ;; jar goes here
@@ -24,7 +25,8 @@
                  [com.ibm.icu/icu4j "52.1"]
                  [org.apache.ant/ant "1.8.4"] ;; dita-ot 1.8.4; latest 1.9.2
                  [net.sourceforge.saxon/saxon "9.1.0.8"] ;; see README.md
-                 ;; [net.sourceforge.saxon/saxon-dom "9.1.0.8"] ;; see README.md
+                 [usr.local/saxon-dom "99"]
+                 ;; [net.sf.saxon/saxon-dom "9.1.0.8"] ;; see README.md
                  [nu.validator.htmlparser/htmlparser "1.4"]
                  ;; [usr.local/saxon "9.5.1.2J"] ;; see README.md
                  ;; [dom4j/dom4j "1.6.1"]
