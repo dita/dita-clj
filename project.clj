@@ -6,13 +6,18 @@
   :main ^:skip-aot dita.core
   :aot [org.dita.dost.util.Configuration]
   :source-paths ["src/clj"]
+  :javac-options ["-target" "1.7" "-source" "1.7"] ;; "-Xlint:deprecation"]
   :java-source-paths ["src/java"]
+  :prep-tasks ["compile"]
+  ;; :java-source-exclude ["org/dita/dost/invoker/JavaInvoker.java"
+  ;;                       "org/dita/dost/invoker/CommandLineInvoker.java"
+  ;;                       "org/dita/dost/util/Configuration.java"]
   :target-path "target/%s/lib" ;; jar goes here
+  ;; Directory in which to place AOT-compiled files. Including %s will
+  ;; splice the :target-path into this value.
+  :compile-path "target/%s/classy-files"
   :clean-targets [:compile-path "target"]
   :resource-paths ["resources"] ;; ["src/main/resource"]
-  :java-source-exclude ["org/dita/dost/invoker/JavaInvoker.java"
-                        "org/dita/dost/invoker/CommandLineInvoker.java"]
-  :javac-options ["-target" "1.7" "-source" "1.7"] ;; "-Xlint:deprecation"]
   :compile-path "target/classes"
   :omit-source true  ;; don't put source in jar
   ;; :jar-name "dost.jar"
