@@ -6,14 +6,14 @@
    :state configuration
    :constructors [[][]]))
 
-(defonce printTransType
+(def printTransType
   (do
     (println "Hello from Configuration.clj printTransType!!")
     (HashMap.)))
 
-(defonce processingMode 'LAX)
+(def processingMode 'LAX)
 
-(defonce configuration
+(def configuration
   ;; public final static Map<String, String> configuration;
   (do
     (println "Hello from Configuration.clj configuration!!")
