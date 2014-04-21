@@ -6,9 +6,71 @@ implemenation of the
 [OASIS Darwin Information Typing Architecture (DITA) specification](http://dita.xml.org/),
 and XML vocabulary for authoring and publishing.
 
+# CURRENT STATUS (2014-04-20)
+
 _**WARNING**_ Pre-alpha - just getting started.  Not usable.  If
 you're interested in helping out you can compare the code here with
 the DITA-OT code and get the idea.
+
+_**CAVEAT**_ None of this will make a bit of sense to you if you are
+not already familiar with DITA-OT and Clojure, but never fear: I've
+taken more-or-less extensive notes on my excavations and put them in
+[doc](https://github.com/dita/dita-clj/tree/master/doc).
+
+That said, there's enough to establish plausiblity.  Of a sort: I've
+managed to run the first preprocessing step gen-list without any of
+the Ant cruft.  In about a dozen lines of Clojure code, in fact.  I'm
+not saying it runs _correctly_; I'm still figuring out the gory
+details of DITA-OT config.  But it runs and produces output ion the
+TMP dir.  If you want to play along, fork and clone the project, then
+from the project root do:
+
+    $ lein run
+
+**CAVEAT** Since I'm still experimenting, don't be too disappointed if
+  it doesn't work when you try it.  But trust me, it's possible to
+  make it go.  If you want to play along, let me know and I'll try to
+  be more responsible.
+
+The toolkit java code is in `src/java`.  It's taken straight from the
+[horse's mouth](https://github.com/dita-ot/dita-ot/tree/develop/src/main/java).
+Other bits, I've rearranged, putting them in `resources`, with a view
+of eventually following orthodox leiningen/clojure practices.  I'm
+using `src/clj/dita/core.clj` for exploration.  **Once I get it all
+figured out, core.clj (etc.) will turn into a leiningen plugin for
+running dita jobs.**
+
+So far I've managed to get the first pre-processing step (gen-list) to
+run.  But I'm stuck on `org/dita/dost/util/Configuration.java`, which
+I want (for now) to replace by a Clojure gen-class, rather than
+modifying the java class.  (See
+[configuration.md](https://github.com/dita/dita-clj/blob/master/doc/configuration.md).)
+Here's why: everything in Configuration.java is final static, which
+means everything is fixed at compile time.  It reads config data at
+compile time, stuffs it into Maps etc. and then responds to `get`
+requests at runtime.  At least I think that's how it works.  In any
+case, I want configuration to be specified at runtime, via a map in
+project.clj or some other config file, such as an EDN file.  I could
+just change the java Configuration.java implementation, but instead
+mucking about with the DITA-OT kernel source I'd rather make a Clojure
+implementation available through a Java interface/protocol.  The idea
+is simple: the Clojure implementation reads config maps or edn files,
+etc. at runtime, and responds to `get` requests just like the original
+Configuration object.
+
+The hair in the pepsi is that we want our clojure code to override the
+java code by structuring the classpath search order.  If you put the
+SDK java source and the clojure test/explore code in the same tree,
+the clojure implementation of org.dita.dost.util.Configuration and the
+java implementation of same get munged up, if you catch my drift.  I'm
+still figuring out how to make something like that work in leiningen
+without creating two projects (an "sdk" project with just the DITA-OT
+source, reorganized, and a "test" project that uses it and implements
+overrides as needed).  If that makes sense.
+
+Unfortunately, I'm not yet sure how to expose public final static
+stuff in gen-class.
+
 
 ## Prelims
 
